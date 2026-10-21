@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE LOCUST: ANALOG HORROR</title>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #00ff66;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        h2 {
+            font-size: 1.1rem;
+            text-align: center;
+            text-shadow: 0 0 5px #00ff66;
+            margin-bottom: 10px;
+        }
+        #terminal {
+            background-color: #111;
+            border: 2px solid #00ff66;
+            width: 100%;
+            max-width: 400px;
+            height: 220px;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 0.85rem;
+            box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.2);
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        .hp-player { color: #ff3333; }
+        .hp-locust { color: #ff6600; }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+        button {
+            background-color: #1a1a1a;
+            color: #00ff66;
+            border: 1px solid #00ff66;
+            padding: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.2s;
+        }
+        button:hover:not(:disabled) {
+            background-color: #00ff66;
+            color: #000;
+        }
+        button:disabled {
+            border-color: #444;
+            color: #444;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>📺 THE LOCUST: ANALOG HORROR 📺</h2>
+
+    <div class="stats">
+        <span id="playerHpText" class="hp-player">❤️ Tu HP: 100</span>
+        <span id="locustHpText" class="hp-locust">🖤 Locust HP: 100</span>
+    </div>
+
+    <div id="terminal">Una habitación a oscuras. La única luz viene de un viejo televisor parpadeante.
+The Locust emerge de la estática: 'Hello... I'm hungry...'
+Tu personaje sonríe afiladamente bajo la capucha y empuña su daga con lianas.</div>
+
+    <div class="controls" id="btnGroup">
+        <button onclick="playerAction('A')">[A] Atacar con Daga (Veneno)</button>
+        <button onclick="playerAction('B')">[B] Emboscada / Ocultarse</button>
+        <button onclick="playerAction('C')">[C] Sonrisa / Provocación Psicológica</button>
+    </div>
+
+    <script>
+        let playerHp = 100;
+        let locustHp = 100;
+        let defending = false;
+
+        function log(message) {
+            const terminal = document.getElementById("terminal");
+            terminal.innerText += "\n\n" + message;
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateStats() {
+            document.getElementById("playerHpText").innerText = `❤️ Tu HP: ${Math.max(0, playerHp)}`;
+            document.getElementById("locustHpText").innerText = `🖤 Locust HP: ${Math.max(0, locustHp)}`;
+        }
+
+        function checkGameOver() {
+            if (locustHp <= 0) {
+                log("🎉 ¡VICTORIA! Tu personaje le propina un golpe fatal impregnado de veneno. The Locust se desvanece de la pantalla.");
+                disableButtons();
+                return true;
+            } else if (playerHp <= 0) {
+                log("💀 DERROTA... The Locust ha cruzado la pantalla y ha atrapado a tu personaje en la oscuridad. Game Over.");
+                disableButtons();
+                return true;
+            }
+            return false;
+        }
+
+        function disableButtons() {
+            const buttons = document.querySelectorAll("#btnGroup button");
+            buttons.forEach(btn => btn.disabled = true);
+        }
+
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function playerAction(choice) {
+            defending = false;
+            const actions = ["attack", "glitch", "stare"];
+            const locustChoice = actions[Math.floor(Math.random() * actions.length)];
+
+            // Turno del Jugador
+            if (choice === 'A') {
+                let dmg = randInt(18, 28);
+                locustHp -= dmg;
+                log(`🗡️ ¡Te abalanzas con la daga! Las lianas venenosas queman al ente. Causas ${dmg} de daño.`);
+            } else if (choice === 'B') {
+                defending = true;
+                log(`🛡️ Te fundes con las sombras de la habitación, listo para esquivar el siguiente ataque.`);
+            } else if (choice === 'C') {
+                let dmg = randInt(10, 20);
+                locustHp -= dmg;
+                log(`👁️ Sonríes macabramente y emites un chillido demoníaco. Causas ${dmg} de daño psicológico.`);
+            }
+
+            updateStats();
+            if (checkGameOver()) return;
+
+            // Turno de The Locust (con retraso de 1 segundo)
+            setTimeout(() => {
+                locustTurn(locustChoice);
+            }, 1000);
+        }
+
+        function locustTurn(action) {
+            if (action === "attack") {
+                let dmg = randInt(15, 25);
+                if (defending) {
+                    dmg = Math.floor(dmg / 2);
+                    log(`⚠️ The Locust lanza un zarpazo deforme, pero estabas oculto y reduces el impacto. Recibes ${dmg} de daño.`);
+                } else {
+                    log(`⚠️ ¡The Locust estira sus extremidades imposibles y te golpea! Recibes ${dmg} de daño.`);
+                }
+                playerHp -= dmg;
+            } else if (action === "glitch") {
+                let dmg = randInt(10, 20);
+                if (defending) {
+                    dmg = Math.floor(dmg / 2);
+                    log(`🌀 Una onda de interferencia inunda el lugar, pero tu cobertura mitiga el daño. Recibes ${dmg} de daño.`);
+                } else {
+                    log(`🌀 ¡La pantalla parpadea con colores corrosivos! Una onda analógica te drena energía. Recibes ${dmg} de daño.`);
+                }
+                playerHp -= dmg;
+            } else if (action === "stare") {
+                log(`👁️ The Locust se queda completamente inmóvil, fijando sus vacíos ojos en ti. Un frío sepulcral recorre tu espina dorsal.`);
+            }
+
+            updateStats();
+            checkGameOver();
+        }
+    </script>
+</body>
+</html>
+
